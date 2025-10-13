@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DesafiaQI</title>
+<style>
+:root{
+  --bg:#0f172a;
+  --accent:#1f7aec;
+  --accent2:#7c3aed;
+  --accent3:#06b6d4;
+  --accent4:#f59e0b;
+  --white:#fff;
+  --muted:#9aa4b2;
+}
+body{margin:0;font-family:Inter,sans-serif;background:linear-gradient(180deg,#071026 0%,#071d3a 100%);color:var(--white);display:flex;justify-content:center;padding:16px;}
+.app{width:100%;max-width:900px;background:rgba(15,23,42,0.9);border-radius:14px;padding:18px;display:grid;gap:18px;}
+header{display:flex;justify-content:space-between;align-items:center;}
+.logo{width:60px;height:60px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;border-radius:12px;font-weight:900;font-size:20px;}
+h1{margin:0;font-size:20px;}
+.screen{display:none;}
+.screen.active{display:block;}
+.btn{padding:14px 20px;border-radius:12px;border:none;font-weight:700;cursor:pointer;}
+.btn-primary{background:linear-gradient(90deg,var(--accent),var(--accent3));color:white;}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:white;}
+.qcard{background:rgba(255,255,255,0.03);padding:14px;border-radius:12px;}
+.choices{display:flex;flex-direction:column;gap:10px;margin-top:10px;}
+label.choice{background:rgba(255,255,255,0.01);padding:12px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:12px;}
+input[type="radio"]{width:18px;height:18px;}
+.nav{display:flex;justify-content:space-between;margin-top:12px;}
+.progress{height:8px;background:rgba(255,255,255,0.03);border-radius:999px;margin-bottom:8px;}
+.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;}
+.scale{height:36px;border-radius:999px;background:rgba(255,255,255,0.03);position:relative;margin-top:8px;display:flex;align-items:center;}
+.band{height:100%;flex-shrink:0;}
+.band.low{background:#5a1414;width:16%;}
+.band.below{background:#6f3f15;width:19%;}
+.band.avg{background:#0ea57b;width:34%;}
+.band.above{background:#2b7bd9;width:19%;}
+.band.high{background:#7c3aed;width:12%;}
+.marker{position:absolute;top:50%;transform:translate(-50%,-50%);width:3px;height:56px;background:var(--accent4);}
+.labels{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--muted);}
+</style>
+</head>
+<body>
+<main class="app">
+<header>
+  <div style="display:flex;gap:12px;align-items:center;">
+    <div class="logo">DQ</div>
+    <div><h1>DesafiaQI</h1><p style="margin:0;font-size:13px;color:var(--muted)">Teste rápido de QI</p></div>
+  </div>
+</header>
+
+<!-- Tela Inicial -->
+<section id="landing" class="screen active">
+  <div class="qcard">
+    <h2>Pronto para descobrir seu QI?</h2>
+    <p>Responda 22 perguntas rápidas para ter uma estimativa do seu QI.</p>
+    <button id="startBtn" class="btn btn-primary">Comece aqui</button>
+  </div>
+</section>
+
+<!-- Quiz -->
+<section id="quizScreen" class="screen">
+  <div class="qcard">
+    <div class="progress"><span id="progressBar"></span></div>
+    <div id="qNumber">Pergunta 1 de 22</div>
+    <div id="qText" style="font-weight:700;margin-top:8px;">Pergunta aqui</div>
+    <div class="choices" id="choices"></div>
+    <div class="nav">
+      <button id="prevBtn" class="btn btn-ghost">Anterior</button>
+      <button id="nextBtn" class="btn btn-ghost">Próxima</button>
+      <button id="finishBtn" class="btn btn-primary" style="display:none;">Finalizar teste</button>
+    </div>
+  </div>
+</section>
+
+<!-- Pagamento -->
+<section id="payScreen" class="screen">
+  <div class="qcard">
+    <h2>Parabéns! Você terminou o teste.</h2>
+    <p>Para desbloquear seu resultado completo, faça o pagamento seguro:</p>
+    <button id="payBtn" class="btn btn-primary">Desbloquear resultado — R$4,90</button>
+    <div id="payStatus" style="margin-top:10px;">Pagamento: não iniciado</div>
+  </div>
+</section>
+
+<!-- Resultado -->
+<section id="resultScreen" class="screen">
+  <div class="qcard">
+    <h2>Seu QI estimado</h2>
+    <div id="finalIQ" style="font-size:32px;font-weight:800;">—</div>
+    <div id="finalScore" style="margin-top:12px;font-size:24px;font-weight:700;">—</div>
+    <div class="scale">
+      <span class="band low"></span><span class="band below"></span><span class="band avg"></span><span class="band above"></span><span class="band high"></span>
+      <div class="marker" id="finalMarker" style="left:50%"></div>
+    </div>
+    <div class="labels"><span>55</span><span>85</span><span>100</span><span>115</span><span>145</span></div>
+  </div>
+</section>
+
+<script>
+const QUESTIONS=[
+{q:"Se todos os gatos são mamíferos e alguns mamíferos são brancos, então:", opts:["Todos os gatos são brancos","Alguns gatos podem ser brancos","Nenhum gato é branco","Todos os mamíferos são gatos"],ans:1},
+{q:"Sequência: 2,4,8,16, ?", opts:["20","24","30","32"],ans:3},
+{q:"5 máquinas fazem 5 peças em 5 minutos. 100 máquinas: ?", opts:["5 min","10 min","50 min","100 min"],ans:0},
+{q:"Trem parte 10h, leva 2h30min. Chegada?", opts:["12h","12h15","12h30","13h"],ans:2},
+{q:"Sequência Fibonacci: 1,1,2,3,5,8, ?", opts:["11","13","15","16"],ans:1},
+{q:"Dobro de 1/4 de 200 é:", opts:["25","50","100","200"],ans:2},
+{q:"Se 3x=18, x=?", opts:["3","6","9","12"],ans:1},
+{q:"Média de 4,10,6,8?", opts:["6","7","8","9"],ans:1},
+{q:"Relógio 3h25: ângulo entre ponteiros?", opts:["120°","90°","72°","60°"],ans:2},
+{q:"9=18,8=16,7=14,5=?", opts:["12","10","8","6"],ans:1},
+{q:"Sinônimo de 'sagaz'", opts:["Lento","Astuto","Triste","Distraído"],ans:1},
+{q:"'Inédito' significa:", opts:["Repetido","Nunca feito antes","Copiado","Anônimo"],ans:1},
+{q:"Complete: 'Ele não apenas estudou, ____ também praticou.'", opts:["senão","como","porém","embora"],ans:1},
+{q:"Qual palavra está incorreta?", opts:["Exceção","Ocasião","Concerto","Excessão"],ans:3},
+{q:"O oposto de superficial é...", opts:["Profundo","Leve","Denso","Difícil"],ans:0},
+{q:"Sequência de figuras: quadrado→triângulo→círculo. Próximo?", opts:["Quadrado","Triângulo","Círculo","Losango"],ans:0},
+{q:"Virar letra N de cabeça para baixo:", opts:["M","Z","U","Ainda é N"],ans:3},
+{q:"Figura que não pertence:", opts:["Cubo","Esfera","Cilindro","Quadrado"],ans:3},
+{q:"3→9,4→16,5→25,6→?", opts:["30","36","42","49"],ans:1},
+{q:"Complete: ▲ ○ ▲ ○ ▲ ?", opts:["○","▲","△","◼️"],ans:0},
+{q:"Ana é mais velha que João, João mais novo que Maria. Mais novo?", opts:["Ana","Maria","João","Não é possível"],ans:2},
+{q:"Espelho mostra 8h15. Que horas?", opts:["3h45","4h45","2h15","9h45"],ans:0},
+];
+
+let currentIndex=0;
+let answers=new Array(QUESTIONS.length).fill(null);
+
+const landing=document.getElementById("landing");
+const quizScreen=document.getElementById("quizScreen");
+const payScreen=document.getElementById("payScreen");
+const resultScreen=document.getElementById("resultScreen");
+
+const startBtn=document.getElementById("startBtn");
+const prevBtn=document.getElementById("prevBtn");
+const nextBtn=document.getElementById("nextBtn");
+const finishBtn=document.getElementById("finishBtn");
+
+const qNumber=document.getElementById("qNumber");
+const qText=document.getElementById("qText");
+const choices=document.getElementById("choices");
+const progressBar=document.getElementById("progressBar");
+
+const finalIQ=document.getElementById("finalIQ");
+const finalScore=document.getElementById("finalScore");
+const finalMarker=document.getElementById("finalMarker");
+
+/* ---------- Funções ---------- */
+function showScreen(screen){
+  [landing,quizScreen,payScreen,resultScreen].forEach(s=>s.classList.remove("active"));
+  screen.classList.add("active");
+}
+function renderQuestion(){
+  const q=QUESTIONS[currentIndex];
+  qNumber.innerText=`Pergunta ${currentIndex+1} de ${QUESTIONS.length}`;
+  qText.innerText=q.q;
+  choices.innerHTML="";
+  q.opts.forEach((opt,i)=>{
+    const label=document.createElement("label");
+    label.className="choice";
+    label.innerHTML=`<input type="radio" name="q" value="${i}" ${answers[currentIndex]===i?'checked':''}> ${opt}`;
+    choices.appendChild(label);
+  });
+  progressBar.style.width=((currentIndex)/QUESTIONS.length*100)+"%";
+
+  // Mostrar/ocultar botões
+  prevBtn.style.display = currentIndex === 0 ? 'none' : 'inline-block';
+  nextBtn.style.display = currentIndex === QUESTIONS.length-1 ? 'none' : 'inline-block';
+  finishBtn.style.display = currentIndex === QUESTIONS.length-1 ? 'inline-block' : 'none';
+}
+function updateAnswer(){
+  const selected=document.querySelector('input[name="q"]:checked');
+  answers[currentIndex]=selected?parseInt(selected.value):null;
+}
+function nextQuestion(){updateAnswer(); if(currentIndex<QUESTIONS.length-1){currentIndex++; renderQuestion();}}
+function prevQuestion(){updateAnswer(); if(currentIndex>0){currentIndex--; renderQuestion();}}
+function finishQuiz(){updateAnswer(); showScreen(payScreen);}
+function calculateResult(){
+  const correct=answers.reduce((acc,a,i)=>a===QUESTIONS[i].ans?acc+1:acc,0);
+  const IQ=Math.round((correct/QUESTIONS.length)*55+70);
+  finalIQ.innerText=IQ;
+  finalScore.innerText=`Acertos: ${correct} / ${QUESTIONS.length}`;
+  const markerPos=((IQ-55)/(145-55))*100;
+  finalMarker.style.left=markerPos+"%";
+}
+
+/* ---------- Event Listeners ---------- */
+startBtn.onclick=()=>{showScreen(quizScreen); renderQuestion();}
+nextBtn.onclick=nextQuestion;
+prevBtn.onclick=prevQuestion;
+finishBtn.onclick=finishQuiz;
+document.getElementById("payBtn").onclick=()=>{
+  document.getElementById("payStatus").innerText="Pagamento concluído!";
+  calculateResult();
+  showScreen(resultScreen);
+};
+</script>
+</body>
+</html>
