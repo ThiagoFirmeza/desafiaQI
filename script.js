@@ -1,3 +1,8 @@
+// ==== VARIÁVEIS GLOBAIS ====
+let currentIndex = 0;
+let answers = [];
+let chart = null;
+
 const QUESTIONS = [
     { q: "1. Complete a sequência: 3, 9, 27, 81, ?", opts: ["162","243","324","121"], a: 1 },
     { q: "2. Se TODOS os zorn são frinks e ALGUNS frinks são bips, então:", opts: ["Todos os bips são zorn","Alguns bips podem ser zorn","Nenhum bip é zorn","Todos os frinks são bips"], a: 1 },
@@ -21,134 +26,118 @@ const QUESTIONS = [
     { q: "20. Uma balança equilibra 2 bolas de ferro e 1 de madeira com 9 kg. Se 1 bola de ferro pesa 4 kg, quanto pesa a de madeira?", opts: ["1 kg","2 kg","3 kg","4 kg"], a: 1 },
     { q: "21. Se 6 pessoas levam 6 dias para construir 6 muros, quanto tempo 3 pessoas levarão para construir 3 muros?", opts: ["3 dias","6 dias","9 dias","12 dias"], a: 1 },
     { q: "22. Se 2x + 3 = 11, então x =", opts: ["3","4","5","6"], a: 1 }
-  ];
-  
-  let currentIndex = 0;
-  let answers = [];
-  let chart = null;
-  
-  const homeScreen = document.getElementById("homeScreen");
-  const quizScreen = document.getElementById("quizScreen");
-  const paymentScreen = document.getElementById("paymentScreen");
-  const resultScreen = document.getElementById("resultScreen");
-  const progressBar = document.getElementById("progressBar");
-  const qNumber = document.getElementById("qNumber");
-  const qText = document.getElementById("qText");
-  const choices = document.getElementById("choices");
-  const scoreDisplay = document.getElementById("scoreDisplay");
-  const correctAnswers = document.getElementById("correctAnswers");
-  const funMessage = document.getElementById("funMessage");
-  
-  // ==== Navegação ====
-  document.getElementById("startBtn").onclick = () => {
+];
+
+// ==== ELEMENTOS ====
+const homeScreen = document.getElementById("homeScreen");
+const quizScreen = document.getElementById("quizScreen");
+const paymentScreen = document.getElementById("paymentScreen");
+const resultScreen = document.getElementById("resultScreen");
+const progressBar = document.getElementById("progressBar");
+const qNumber = document.getElementById("qNumber");
+const qText = document.getElementById("qText");
+const choices = document.getElementById("choices");
+const scoreDisplay = document.getElementById("scoreDisplay");
+const correctAnswers = document.getElementById("correctAnswers");
+const funMessage = document.getElementById("funMessage");
+
+// ==== NAVEGAÇÃO ====
+document.getElementById("startBtn").onclick = () => {
     homeScreen.classList.remove("active");
     quizScreen.classList.add("active");
     renderQuestion();
-  };
-  
-  document.getElementById("prevBtn").onclick = () => {
+};
+
+document.getElementById("prevBtn").onclick = () => {
     if (currentIndex > 0) {
-      currentIndex--;
-      renderQuestion();
+        currentIndex--;
+        renderQuestion();
     }
-  };
-  
-  document.getElementById("nextBtn").onclick = () => {
-    if (document.querySelector('input[name="q"]:checked')) {
-      answers[currentIndex] = parseInt(document.querySelector('input[name="q"]:checked').value);
-      currentIndex++;
-      renderQuestion();
+};
+
+document.getElementById("nextBtn").onclick = () => {
+    const selected = document.querySelector('input[name="q"]:checked');
+    if (selected) {
+        answers[currentIndex] = parseInt(selected.value);
+        currentIndex++;
+        renderQuestion();
     } else {
-      showAlert("Selecione uma resposta!", "Atenção");
+        showAlert("Selecione uma resposta!", "Atenção");
     }
-  };
-  
-  document.getElementById("finishBtn").onclick = () => {
-    if (document.querySelector('input[name="q"]:checked')) {
-      answers[currentIndex] = parseInt(document.querySelector('input[name="q"]:checked').value);
-      quizScreen.classList.remove("active");
-      paymentScreen.classList.add("active");
+};
+
+document.getElementById("finishBtn").onclick = () => {
+    const selected = document.querySelector('input[name="q"]:checked');
+    if (selected) {
+        answers[currentIndex] = parseInt(selected.value);
+        quizScreen.classList.remove("active");
+        paymentScreen.classList.add("active");
     } else {
-      showAlert("Responda a última pergunta antes de finalizar!", "Ops!");
+        showAlert("Responda a última pergunta antes de finalizar!", "Ops!");
     }
-  };
-  
-  document.getElementById("payBtn").onclick = () => {
-    // Simulação de pagamento
-    paymentScreen.classList.remove("active");
-    resultScreen.classList.add("active");
-    showResult();
-  };
-  
-  // ==== Renderização ====
-  function renderQuestion() {
+};
+
+// ==== RENDERIZAR PERGUNTAS ====
+function renderQuestion() {
     const q = QUESTIONS[currentIndex];
     qNumber.innerText = `Pergunta ${currentIndex + 1} de ${QUESTIONS.length}`;
     qText.innerText = q.q;
     choices.innerHTML = "";
-  
+
     q.opts.forEach((opt, i) => {
-      const label = document.createElement("label");
-      label.className = "choice";
-      label.innerHTML = `<input type="radio" name="q" value="${i}" ${answers[currentIndex]===i?'checked':''}> ${opt}`;
-      choices.appendChild(label);
+        const label = document.createElement("label");
+        label.className = "choice";
+        label.innerHTML = `<input type="radio" name="q" value="${i}" ${answers[currentIndex]===i?'checked':''}> ${opt}`;
+        choices.appendChild(label);
     });
-  
+
     progressBar.style.width = ((currentIndex) / QUESTIONS.length * 100) + "%";
     document.getElementById("prevBtn").style.display = currentIndex === 0 ? 'none' : 'inline-block';
     document.getElementById("nextBtn").style.display = currentIndex === QUESTIONS.length - 1 ? 'none' : 'inline-block';
     document.getElementById("finishBtn").style.display = currentIndex === QUESTIONS.length - 1 ? 'inline-block' : 'none';
-  }
-  
-  // ==== Resultado ====
-  function showResult() {
-    const correct = answers.filter((a, i) => a === QUESTIONS[i].a).length;
-    const iq = Math.round(80 + (correct / QUESTIONS.length) * 40);
-    scoreDisplay.innerText = iq;
-    correctAnswers.innerText = correct;
-  
-    let message = "";
-    if (iq >= 140) message = "🧠 Quase Einstein!";
-    else if (iq >= 120) message = "✨ Acima da média! Você é afiado!";
-    else if (iq >= 100) message = "😎 Dentro da média, mente equilibrada!";
-    else message = "😂 Bora tentar de novo? O importante é se divertir!";
-  
-    funMessage.innerText = message;
-  
-    const ctx = document.getElementById("iqChart").getContext("2d");
-    if (chart) chart.destroy();
-    chart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ["Você", "Média Mundial"],
-        datasets: [{
-          label: 'QI',
-          data: [iq, 100],
-          backgroundColor: ['#00b4d8', '#94a3b8']
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: { beginAtZero: true, max: 160 }
-        }
-      }
-    });
-  }
-  
-  // ==== ALERTA CENTRAL ====
-  function showAlert(message, title = "Aviso") {
-    let existing = document.querySelector(".custom-alert");
+}
+
+// ==== ALERTAS ====
+function showAlert(message, title = "Aviso") {
+    const existing = document.querySelector(".custom-alert");
     if (existing) existing.remove();
-  
-    let alertBox = document.createElement("div");
+
+    const alertBox = document.createElement("div");
     alertBox.classList.add("custom-alert");
     alertBox.innerHTML = `
-      <h2>${title}</h2>
-      <p>${message}</p>
-      <button onclick="this.parentElement.remove()">OK</button>
+        <div class="alert-content">
+            <h2>${title}</h2>
+            <p>${message}</p>
+            <button id="closeAlertBtn">OK</button>
+        </div>
     `;
     document.body.appendChild(alertBox);
     setTimeout(() => alertBox.classList.add("active"), 10);
-  }
-  
+
+    document.getElementById("closeAlertBtn").onclick = () => alertBox.remove();
+}
+
+// ==== PIX REAL (Mercado Pago) ====
+document.getElementById("payBtn").onclick = async () => {
+    const userId = "usuario1"; // Substitua por ID único por usuário/sessão
+    try {
+        const res = await fetch("http://localhost:5000/create-pix", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId })
+        });
+        const data = await res.json();
+        showPixReal(data.url, userId);
+    } catch (err) {
+        showAlert("Erro ao criar pagamento. Tente novamente.");
+    }
+};
+
+function showPixReal(url, userId) {
+    const existing = document.querySelector(".custom-alert");
+    if (existing) existing.remove();
+
+    const alertBox = document.createElement("div");
+    alertBox.classList.add("custom-alert");
+    al
+}
